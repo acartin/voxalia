@@ -80,6 +80,39 @@ services:
       - voxalia-chatwoot-storage:/app/storage
     restart: unless-stopped
 
+  voxalia-web:
+    build:
+      context: ./services/web/voxalia
+    image: voxalia-web:dev
+    container_name: voxalia-web
+    environment:
+      VOXALIA_API_BASE_URL: ${VOXALIA_API_BASE_URL:-http://voxalia-web-api:8000/api/v1}
+      VOXALIA_PLACEHOLDER_AUTH: ${VOXALIA_PLACEHOLDER_AUTH:-false}
+      VOXALIA_SECURE_COOKIES: ${VOXALIA_SECURE_COOKIES:-false}
+    ports:
+      - "${VOXALIA_WEB_PORT:-8320}:3000"
+    depends_on:
+      voxalia-web-api:
+        condition: service_started
+    restart: unless-stopped
+
+  voxalia-web-api:
+    build:
+      context: ./services/web-api
+    image: voxalia-web-api:dev
+    container_name: voxalia-web-api
+    environment:
+      VOXALIA_DATABASE_URL: ${VOXALIA_DATABASE_URL:?set VOXALIA_DATABASE_URL in .env}
+      VOXALIA_BOOTSTRAP_ADMIN_USERNAME: ${VOXALIA_BOOTSTRAP_ADMIN_USERNAME:-}
+      VOXALIA_BOOTSTRAP_ADMIN_EMAIL: ${VOXALIA_BOOTSTRAP_ADMIN_EMAIL:-}
+      VOXALIA_BOOTSTRAP_ADMIN_PASSWORD: ${VOXALIA_BOOTSTRAP_ADMIN_PASSWORD:-}
+    ports:
+      - "${VOXALIA_WEB_API_PORT:-8330}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   freepbx-db:
     image: mariadb:10.11
     container_name: voxalia-freepbx-db
@@ -106,6 +139,8 @@ services:
     ports:
       - "${FREEPBX_HTTP_PORT:-8310}:80/tcp"
       - "${FREEPBX_HTTPS_PORT:-8311}:443/tcp"
+      - "${FREEPBX_ASTERISK_WS_PORT:-8088}:8088/tcp"
+      - "${FREEPBX_ASTERISK_WSS_PORT:-8089}:8089/tcp"
       - "${FREEPBX_SIP_PORT:-5062}:5060/udp"
       - "${FREEPBX_RTP_START:-12000}-${FREEPBX_RTP_END:-12100}:12000-12100/udp"
     depends_on:
@@ -114,6 +149,9 @@ services:
       - /usr/share/zoneinfo/${FREEPBX_TZ:-America/Costa_Rica}:/etc/localtime:ro
       - voxalia-freepbx-var:/var
       - voxalia-freepbx-etc:/etc
+      - ./infra/freepbx/ensure-modules.sh:/usr/local/bin/voxalia-ensure-freepbx-modules.sh:ro
+      - ./infra/freepbx/entrypoint-with-modules.sh:/usr/local/bin/voxalia-freepbx-entrypoint.sh:ro
+    command: ["bash", "/usr/local/bin/voxalia-freepbx-entrypoint.sh"]
     restart: unless-stopped
 
   chatwoot-prepare:
