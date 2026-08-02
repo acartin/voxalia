@@ -3,12 +3,13 @@ import type React from "react";
 export type CrudChoice = {
   value: string;
   label: string;
+  tenant_id?: string;
 };
 
 export type CrudField = {
   name: string;
   label: string;
-  type?: "email" | "password" | "tel" | "text";
+  type?: "email" | "hidden" | "number" | "password" | "tel" | "text";
   required?: boolean;
   minLength?: number;
   placeholder?: string;
@@ -18,9 +19,13 @@ export type CrudField = {
   editable?: boolean;
   createOnly?: boolean;
   editOnly?: boolean;
-  control?: "input" | "select" | "checkbox-group";
+  control?: "input" | "select" | "checkbox-group" | "json" | "textarea";
   options?: CrudChoice[];
   optionsSource?: string;
+  hideWhen?: {
+    field: string;
+    values: string[];
+  };
 };
 
 export type CrudColumn<TRecord extends Record<string, unknown>> = {
@@ -34,7 +39,7 @@ export type CrudColumn<TRecord extends Record<string, unknown>> = {
   headerClassName?: string;
 };
 
-export type CrudAction = "view" | "edit" | "deactivate" | "workspace";
+export type CrudAction = "view" | "edit" | "delete" | "deactivate" | "workspace";
 
 export type CrudResourceConfig<TRecord extends Record<string, unknown>> = {
   id: string;

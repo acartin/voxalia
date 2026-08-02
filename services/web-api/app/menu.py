@@ -66,7 +66,10 @@ MENU_CATALOG = [
         "items": [
             {"id": "tenants", "label": "Tenants", "href": "/settings/tenants", "description": "Partners, tenant policies, service hours and escalation contacts.", "required_permission": "tenants:manage"},
             {"id": "users", "label": "Users", "href": "/settings/users", "description": "Users, tenant memberships and account lifecycle.", "required_permission": "auth:users:manage"},
+            {"id": "agents", "label": "Agents", "href": "/settings/agents", "description": "Voxalia operator profiles, tenant assignments, skills and availability.", "required_permission": "auth:users:manage"},
             {"id": "roles", "label": "Roles", "href": "/settings/roles", "description": "Roles, permission grants and authorization policy.", "required_permission": "auth:roles:manage"},
+            {"id": "asterisk-infrastructure", "label": "Asterisk Infrastructure", "href": "/settings/asterisk-infrastructure", "description": "Global Asterisk connectivity placeholders for trunks, carriers and instances.", "required_permission": "voice:configure"},
+            {"id": "asterisk", "label": "Asterisk Tenant Profiles", "href": "/settings/asterisk", "description": "Tenant voice profiles, assigned numbers, contexts, routing, recording and provisioning.", "required_permission": "voice:configure"},
             {"id": "integrations", "label": "Integrations", "href": "/settings/integrations", "description": "PMS, CRM, payment, email and provider connector settings.", "required_permission": "integrations:configure"},
             {"id": "audit", "label": "Audit log", "href": "/settings/audit", "description": "Security and operational audit trail.", "required_permission": "audit:read"},
         ],

@@ -1,9 +1,9 @@
 # BRAIN_MAP
 
-- Generated UTC: `2026-07-24T18:37:23Z`
+- Generated UTC: `2026-07-31T19:21:34Z`
 - Repo root: `/srv/voxalia`
-- Git branch: `HETZNER-LOCAL-2026-Julio-23`
-- Git commit: `0cf0080`
+- Git branch: `HETZNER-LOCAL-2026-Julio-26`
+- Git commit: `da02f26`
 - Policy: high-signal only; Voxalia safeguards, security and context economy.
 
 ## 1. Mapa De Intenciones
@@ -35,10 +35,12 @@
 freepbx-db
 freepbx
 postgres
+voxalia-web-api
 redis
+chatwoot-worker
+voxalia-asterisk
 voxalia-web
 chatwoot
-chatwoot-worker
 ```
 
 ## 4. Topologia Compacta
@@ -86,10 +88,14 @@ products/managed-reception
 products/multichannel-inbox
 products/sales-followup
 services
-services/web-api
-services/web-api/db
+services/asterisk
+services/asterisk/app
+services/asterisk/db
 services/voice-runtime
 services/web
+services/web-api
+services/web-api/app
+services/web-api/db
 services/web/voxalia
 services/worker
 verticals
@@ -132,6 +138,7 @@ docs/adr/0001-managed-reception-hospitality-domain.md
 docs/adr/README.md
 docs/architecture/README.md
 docs/operations/README.md
+docs/operations/crud-and-operational-views-agent-prompt.md
 infra/README.md
 infra/asterisk/README.md
 infra/backup/README.md
@@ -159,9 +166,24 @@ products/managed-reception/README.md
 products/multichannel-inbox/README.md
 products/sales-followup/README.md
 services/README.md
-services/web-api/README.md
-services/web-api/db/README.md
+services/asterisk/Dockerfile
+services/asterisk/README.md
+services/asterisk/app/__init__.py
+services/asterisk/app/config.py
+services/asterisk/app/db.py
+services/asterisk/app/main.py
+services/asterisk/requirements.txt
 services/voice-runtime/README.md
+services/web-api/Dockerfile
+services/web-api/README.md
+services/web-api/app/__init__.py
+services/web-api/app/config.py
+services/web-api/app/db.py
+services/web-api/app/main.py
+services/web-api/app/menu.py
+services/web-api/app/security.py
+services/web-api/db/README.md
+services/web-api/requirements.txt
 services/web/voxalia/Dockerfile
 services/web/voxalia/README.md
 services/web/voxalia/next-env.d.ts

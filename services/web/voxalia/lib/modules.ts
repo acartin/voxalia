@@ -20,7 +20,9 @@ export const moduleEndpointByPath: Record<string, string> = {
   "/intelligence/reports": "/intelligence/reports",
   "/settings/tenants": "/settings/tenants",
   "/settings/users": "/settings/users",
+  "/settings/agents": "/settings/agents",
   "/settings/roles": "/settings/roles",
+  "/settings/asterisk": "/settings/asterisk",
   "/settings/integrations": "/settings/integrations",
   "/settings/audit": "/settings/audit"
 };

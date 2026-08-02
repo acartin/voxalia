@@ -1,9 +1,9 @@
 # AI Context Pack
 
-- Generated UTC: `2026-07-24T18:37:23Z`
+- Generated UTC: `2026-07-31T19:21:34Z`
 - Repo root: `/srv/voxalia`
-- Git branch: `HETZNER-LOCAL-2026-Julio-23`
-- Git commit: `0cf0080`
+- Git branch: `HETZNER-LOCAL-2026-Julio-26`
+- Git commit: `da02f26`
 - Policy: compact; read exact files only when the task needs them.
 
 ## Start Here
@@ -29,10 +29,12 @@
 freepbx-db
 freepbx
 postgres
+voxalia-web-api
 redis
+chatwoot-worker
+voxalia-asterisk
 voxalia-web
 chatwoot
-chatwoot-worker
 ```
 
 ## Operational Entry Points

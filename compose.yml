@@ -87,12 +87,15 @@ services:
     container_name: voxalia-web
     environment:
       VOXALIA_API_BASE_URL: ${VOXALIA_API_BASE_URL:-http://voxalia-web-api:8000/api/v1}
+      VOXALIA_ASTERISK_API_BASE_URL: ${VOXALIA_ASTERISK_API_BASE_URL:-http://voxalia-asterisk:8000/api/v1}
       VOXALIA_PLACEHOLDER_AUTH: ${VOXALIA_PLACEHOLDER_AUTH:-false}
       VOXALIA_SECURE_COOKIES: ${VOXALIA_SECURE_COOKIES:-false}
     ports:
       - "${VOXALIA_WEB_PORT:-8320}:3000"
     depends_on:
       voxalia-web-api:
+        condition: service_started
+      voxalia-asterisk:
         condition: service_started
     restart: unless-stopped
 
@@ -108,6 +111,20 @@ services:
       VOXALIA_BOOTSTRAP_ADMIN_PASSWORD: ${VOXALIA_BOOTSTRAP_ADMIN_PASSWORD:-}
     ports:
       - "${VOXALIA_WEB_API_PORT:-8330}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  voxalia-asterisk:
+    build:
+      context: ./services/asterisk
+    image: voxalia-asterisk:dev
+    container_name: voxalia-asterisk
+    environment:
+      VOXALIA_ASTERISK_DATABASE_URL: ${VOXALIA_ASTERISK_DATABASE_URL:-${VOXALIA_DATABASE_URL:?set VOXALIA_DATABASE_URL in .env}}
+    ports:
+      - "${VOXALIA_ASTERISK_PORT:-8340}:8000"
     depends_on:
       postgres:
         condition: service_healthy

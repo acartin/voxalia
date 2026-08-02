@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { MenuItem, MenuPayload, MenuSection, ModulePayload, Role, WorkspacePayload } from "@/lib/types";
 
 export const API_BASE_URL = process.env.VOXALIA_API_BASE_URL ?? "";
+export const ASTERISK_API_BASE_URL = process.env.VOXALIA_ASTERISK_API_BASE_URL ?? "";
 export const placeholderAuthEnabled = process.env.VOXALIA_PLACEHOLDER_AUTH !== "false" && !API_BASE_URL;
 export const sessionCookieName = "voxalia_session";
 export const placeholderRoleCookieName = "voxalia_placeholder_role";
@@ -97,7 +98,7 @@ export const menuCatalog: MenuSection[] = [
       },
       {
         id: "numbers",
-        label: "Numbers & routing",
+        label: "Numbers",
         href: "/voice/numbers",
         description: "DIDs, toll-free numbers, trunks, inbound routes and recording policies.",
         required_permission: "voice:configure"
@@ -232,11 +233,32 @@ export const menuCatalog: MenuSection[] = [
         required_permission: "auth:users:manage"
       },
       {
+        id: "agents",
+        label: "Agents",
+        href: "/settings/agents",
+        description: "Voxalia operator profiles, tenant assignments, skills and availability.",
+        required_permission: "auth:users:manage"
+      },
+      {
         id: "roles",
         label: "Roles",
         href: "/settings/roles",
         description: "Roles, permission grants and authorization policy.",
         required_permission: "auth:roles:manage"
+      },
+      {
+        id: "asterisk-infrastructure",
+        label: "Asterisk Infrastructure",
+        href: "/settings/asterisk-infrastructure",
+        description: "Global Asterisk connectivity for trunks, carriers and runtime instances.",
+        required_permission: "voice:configure"
+      },
+      {
+        id: "asterisk",
+        label: "Asterisk Tenant Profiles",
+        href: "/settings/asterisk",
+        description: "Tenant voice profiles, assigned numbers, contexts, routing, recording and provisioning.",
+        required_permission: "voice:configure"
       },
       {
         id: "integrations",
@@ -391,4 +413,84 @@ export async function getWorkspace(path: string): Promise<WorkspacePayload> {
   }
 
   return getJson<WorkspacePayload>(path);
+}
+
+export async function getAsteriskModule(): Promise<ModulePayload> {
+  if (!ASTERISK_API_BASE_URL) {
+    throw new Error("VOXALIA_ASTERISK_API_BASE_URL is not configured");
+  }
+
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/tenants`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Voxalia Asterisk API error ${response.status}`);
+  }
+
+  return response.json() as Promise<ModulePayload>;
+}
+
+export async function getAsteriskTrunks(): Promise<ModulePayload> {
+  if (!ASTERISK_API_BASE_URL) {
+    throw new Error("VOXALIA_ASTERISK_API_BASE_URL is not configured");
+  }
+
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/infrastructure/trunks`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Voxalia Asterisk API error ${response.status}`);
+  }
+
+  return response.json() as Promise<ModulePayload>;
+}
+
+export async function getAsteriskCarriers(): Promise<ModulePayload> {
+  if (!ASTERISK_API_BASE_URL) {
+    throw new Error("VOXALIA_ASTERISK_API_BASE_URL is not configured");
+  }
+
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/infrastructure/carriers`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Voxalia Asterisk API error ${response.status}`);
+  }
+
+  return response.json() as Promise<ModulePayload>;
+}
+
+export async function getAsteriskInstances(): Promise<ModulePayload> {
+  if (!ASTERISK_API_BASE_URL) {
+    throw new Error("VOXALIA_ASTERISK_API_BASE_URL is not configured");
+  }
+
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/infrastructure/instances`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Voxalia Asterisk API error ${response.status}`);
+  }
+
+  return response.json() as Promise<ModulePayload>;
+}
+
+export async function getAsteriskWorkspace(tenantKey: string): Promise<WorkspacePayload> {
+  if (!ASTERISK_API_BASE_URL) {
+    throw new Error("VOXALIA_ASTERISK_API_BASE_URL is not configured");
+  }
+
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/tenants/${encodeURIComponent(tenantKey)}/workspace`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Voxalia Asterisk API error ${response.status}`);
+  }
+
+  return response.json() as Promise<WorkspacePayload>;
 }

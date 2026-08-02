@@ -27,3 +27,6 @@ Current migrations:
 - `002_auth_grants.sql`: application/admin database grants.
 - `003_tenant_workspace_foundation.sql`: tenant workspace domain tables for products, policies, hours, channels, numbers, contacts, agent assignments, scripts and reporting recipients.
 - `004_operations_voice_ai_foundation.sql`: Voxalia-owned conversations, workflow tasks, opportunities, provider mappings, voice call records, recordings, LLM processing, search indexing and operational audit.
+- `005_seed_hotel_valle_azul_channels_numbers.sql`: example tenant service policy, channels and numbers/routing rows for Hotel Valle Azul.
+- `006_country_catalog.sql`: country catalog for tenant profiles and voice number country dropdowns.
+- `007_seed_hotel_valle_azul_contacts.sql`: example tenant contacts and contact methods for Hotel Valle Azul.

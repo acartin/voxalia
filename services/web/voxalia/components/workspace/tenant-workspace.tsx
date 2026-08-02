@@ -7,10 +7,12 @@ import { WorkspacePage } from "./workspace-page";
 export function TenantWorkspace({
   payload,
   initialTab,
+  contactFilter,
   feedback
 }: {
   payload: WorkspacePayload;
   initialTab?: string;
+  contactFilter?: string;
   feedback?: Feedback | null;
 }) {
   return (
@@ -19,6 +21,7 @@ export function TenantWorkspace({
       backHref="/settings/tenants"
       backLabel="Tenants"
       initialTab={initialTab}
+      contactFilter={contactFilter}
       feedback={feedback}
     />
   );

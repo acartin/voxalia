@@ -64,6 +64,9 @@ export type WorkspaceSection = {
   description: string;
   status?: string;
   component?: string;
+  crud?: Record<string, unknown>;
+  hiddenFromTabs?: boolean;
+  parentSectionId?: string;
   records?: Array<Record<string, unknown>>;
 };
 

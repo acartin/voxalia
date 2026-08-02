@@ -2,14 +2,15 @@ import { ArrowUpRight, Database, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Alert } from "@/components/ui/alert";
+import { FeedbackAlert } from "@/components/ui/feedback-alert";
+import { AgentsCrud } from "@/components/crud/agents-crud";
 import { TenantsCrud } from "@/components/crud/tenants-crud";
 import { UsersCrud } from "@/components/crud/users-crud";
 import { ModulePayload } from "@/lib/types";
 import { Feedback } from "@/lib/feedback";
 
 export function ModuleView({ payload, feedback }: { payload: ModulePayload; feedback?: Feedback | null }) {
-  const usesCustomBody = payload.module.id === "settings.users" || payload.module.id === "settings.tenants";
+  const usesCustomBody = payload.module.id === "settings.users" || payload.module.id === "settings.tenants" || payload.module.id === "settings.agents";
 
   return (
     <div className="space-y-6">
@@ -35,16 +36,14 @@ export function ModuleView({ payload, feedback }: { payload: ModulePayload; feed
         ) : null}
       </div>
 
-      {feedback ? (
-        <Alert variant={feedback.type} title={feedback.type === "error" ? "Could not save" : "Operation completed"}>
-          {feedback.message}
-        </Alert>
-      ) : null}
+      <FeedbackAlert feedback={feedback} />
 
       {payload.module.id === "settings.users" ? (
         <UsersCrud payload={payload} />
       ) : payload.module.id === "settings.tenants" ? (
         <TenantsCrud payload={payload} />
+      ) : payload.module.id === "settings.agents" ? (
+        <AgentsCrud payload={payload} />
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-3">

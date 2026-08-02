@@ -6,9 +6,15 @@ import { ArrowUpRight, Eye, Filter, Pencil, Plus, Search, Trash2 } from "lucide-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
 import { CrudFormDialog } from "./crud-form-dialog";
 import { CrudGrid } from "./crud-grid";
 import { CrudColumn, CrudResourceConfig } from "./types";
+
+type RowAction = {
+  label: string;
+  href: string;
+};
 
 function normalizeSearch(value: unknown) {
   return String(value ?? "")
@@ -42,17 +48,33 @@ function recordMatchesFilters<TRecord extends Record<string, unknown>>(
   });
 }
 
+function rowActions(value: unknown): RowAction[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is RowAction => {
+    if (!item || typeof item !== "object") return false;
+    const candidate = item as Record<string, unknown>;
+    return typeof candidate.label === "string" && typeof candidate.href === "string";
+  });
+}
+
 export function CrudResourcePage<TRecord extends Record<string, unknown>>({
   config,
-  records
+  records,
+  onNavigateAction,
+  hideToolbar = false,
+  hideHeader = false
 }: {
   config: CrudResourceConfig<TRecord>;
   records: TRecord[];
+  onNavigateAction?: (href: string) => void;
+  hideToolbar?: boolean;
+  hideHeader?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
   const [createOpen, setCreateOpen] = useState(false);
   const [activeRecord, setActiveRecord] = useState<TRecord | null>(null);
+  const [deleteRecord, setDeleteRecord] = useState<TRecord | null>(null);
   const [mode, setMode] = useState<"view" | "edit" | null>(null);
 
   const normalizedQuery = normalizeSearch(query);
@@ -78,6 +100,29 @@ export function CrudResourcePage<TRecord extends Record<string, unknown>>({
         const rowId = String(record[config.identityField] ?? "");
         return (
           <div className="flex justify-end gap-1">
+            {rowActions(record._actions).map((action) => (
+              <Button
+                key={action.href}
+                asChild={!onNavigateAction}
+                type="button"
+                variant="ghost"
+                className="h-8 px-2"
+                title={action.label}
+                onClick={onNavigateAction ? () => onNavigateAction(action.href) : undefined}
+              >
+                {onNavigateAction ? (
+                  <>
+                    <span>{action.label}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </>
+                ) : (
+                  <Link href={action.href}>
+                    <span>{action.label}</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
+                )}
+              </Button>
+            ))}
             {config.allowedActions.includes("view") ? (
               <Button
                 type="button"
@@ -122,6 +167,17 @@ export function CrudResourcePage<TRecord extends Record<string, unknown>>({
                 </Button>
               </form>
             ) : null}
+            {config.allowedActions.includes("delete") ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-8 w-8 px-0"
+                title="Delete"
+                onClick={() => setDeleteRecord(record)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            ) : null}
           </div>
         );
       }
@@ -136,64 +192,77 @@ export function CrudResourcePage<TRecord extends Record<string, unknown>>({
   return (
     <>
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-md border border-border-2 bg-card p-3 shadow-[0_1px_2px_var(--shadow-color)] lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center">
-            <label className="relative w-full md:max-w-sm">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={config.searchPlaceholder}
-                aria-label={config.searchPlaceholder}
-                className="h-control w-full rounded-md border border-border-2 bg-background pl-9 pr-3 text-body-sm outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-              />
-            </label>
-            {config.filters?.map((filter) => (
-              <label key={filter.key} className="flex items-center gap-2">
-                <span className="sr-only">{filter.label}</span>
-                <select
-                  value={selectedFilters[filter.key] ?? ""}
-                  onChange={(event) =>
-                    setSelectedFilters((current) => ({ ...current, [filter.key]: event.target.value }))
-                  }
-                  className="h-control rounded-md border border-border-2 bg-background px-3 text-body-sm outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                >
-                  <option value="">{filter.allLabel}</option>
-                  {filter.options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+        {hideToolbar ? (
+          config.canCreate !== false ? (
+            <div className="flex justify-end">
+              <Button type="button" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {config.createLabel}
+              </Button>
+            </div>
+          ) : null
+        ) : (
+          <div className="flex flex-col gap-3 rounded-md border border-border-2 bg-card p-3 shadow-[0_1px_2px_var(--shadow-color)] lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center">
+              <label className="relative w-full md:max-w-sm">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={config.searchPlaceholder}
+                  aria-label={config.searchPlaceholder}
+                  className="h-control w-full rounded-md border border-border-2 bg-background pl-9 pr-3 text-body-sm outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                />
               </label>
-            ))}
-            <Button type="button" variant="outline" onClick={clearFilters}>
-              <Filter className="h-4 w-4" />
-              Clear
-            </Button>
+              {config.filters?.map((filter) => (
+                <label key={filter.key} className="flex items-center gap-2">
+                  <span className="sr-only">{filter.label}</span>
+                  <select
+                    value={selectedFilters[filter.key] ?? ""}
+                    onChange={(event) =>
+                      setSelectedFilters((current) => ({ ...current, [filter.key]: event.target.value }))
+                    }
+                    className="h-control rounded-md border border-border-2 bg-background px-3 text-body-sm outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                  >
+                    <option value="">{filter.allLabel}</option>
+                    {filter.options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ))}
+              <Button type="button" variant="outline" onClick={clearFilters}>
+                <Filter className="h-4 w-4" />
+                Clear
+              </Button>
+            </div>
+            {config.canCreate !== false ? (
+              <Button type="button" onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4" />
+                {config.createLabel}
+              </Button>
+            ) : null}
           </div>
-          {config.canCreate !== false ? (
-            <Button type="button" onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" />
-              {config.createLabel}
-            </Button>
-          ) : null}
-        </div>
+        )}
 
         <Card>
-          <CardHeader>
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="text-card-title font-medium">{config.title}</div>
-                <div className="mt-1 text-body-sm text-muted-foreground">{config.description}</div>
+          {hideHeader ? null : (
+            <CardHeader>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <div className="text-card-title font-medium">{config.title}</div>
+                  <div className="mt-1 text-body-sm text-muted-foreground">{config.description}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge>{filteredRecords.length} shown</Badge>
+                  <Badge>{records.length} total</Badge>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Badge>{filteredRecords.length} shown</Badge>
-                <Badge>{records.length} total</Badge>
-              </div>
-            </div>
-          </CardHeader>
+            </CardHeader>
+          )}
           <CardContent>
             <CrudGrid
               columns={columns}
@@ -207,6 +276,7 @@ export function CrudResourcePage<TRecord extends Record<string, unknown>>({
 
       {config.canCreate !== false ? (
         <CrudFormDialog
+          key={`${config.id}:create`}
           open={createOpen}
           mode="create"
           title={`New ${config.eyebrow ?? config.title}`}
@@ -218,6 +288,7 @@ export function CrudResourcePage<TRecord extends Record<string, unknown>>({
       ) : null}
 
       <CrudFormDialog
+        key={`${config.id}:${mode ?? "closed"}:${String(activeRecord?.[config.identityField] ?? "none")}`}
         open={mode !== null && activeRecord !== null}
         mode={mode ?? "view"}
         title={`${mode === "edit" ? "Edit" : "View"} ${String(activeRecord?.[config.titleField] ?? "record")}`}
@@ -235,6 +306,38 @@ export function CrudResourcePage<TRecord extends Record<string, unknown>>({
           setActiveRecord(null);
         }}
       />
+
+      <Modal
+        open={deleteRecord !== null}
+        title="Confirm delete"
+        description="This action permanently deletes the selected record."
+        onClose={() => setDeleteRecord(null)}
+        className="max-w-lg"
+      >
+        <div className="space-y-5">
+          <div className="rounded-md border border-destructive/30 bg-[var(--red-bg)] px-3 py-3 text-body-sm text-[var(--red-text)]">
+            You are about to permanently delete{" "}
+            <span className="font-medium">
+              {String(deleteRecord?.[config.titleField] ?? deleteRecord?.[config.identityField] ?? "this record")}
+            </span>
+            . This cannot be undone.
+          </div>
+          <div className="flex justify-end gap-2 border-t pt-4">
+            <Button type="button" variant="outline" onClick={() => setDeleteRecord(null)}>
+              Cancel
+            </Button>
+            {deleteRecord ? (
+              <form action={`${config.rowActionBasePath}/${encodeURIComponent(String(deleteRecord[config.identityField] ?? ""))}`} method="post">
+                <input type="hidden" name="_method" value="delete" />
+                <Button type="submit">
+                  <Trash2 className="h-4 w-4" />
+                  Delete permanently
+                </Button>
+              </form>
+            ) : null}
+          </div>
+        </div>
+      </Modal>
     </>
   );
 }

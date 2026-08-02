@@ -69,5 +69,10 @@ export async function POST(request: Request) {
     return NextResponse.json(await response.json(), { status: response.status });
   }
 
-  return redirectTo(roleId === "system_admin" ? redirectToPath : defaultAuthenticatedPath);
+  if (!isRole(roleId)) {
+    return redirectTo(defaultAuthenticatedPath);
+  }
+
+  const nextPath = roleCanAccessPath(roleId, redirectToPath) ? redirectToPath : defaultPathForRole(roleId);
+  return redirectTo(nextPath);
 }

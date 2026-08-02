@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/portal/app-shell";
 import { ModuleView } from "@/components/portal/module-view";
 import { getMenu, getModule } from "@/lib/api";
@@ -18,9 +18,15 @@ export default async function ModulePage({
   const endpoint = moduleEndpointByPath[currentPath];
   if (!endpoint) notFound();
 
-  const [menu, payload] = await Promise.all([getMenu(), getModule(endpoint)]);
+  const menu = await getMenu();
   const allowed = menu.sections.some((section) => section.items.some((item) => item.href === currentPath));
-  if (!allowed) notFound();
+  if (!allowed) {
+    const fallbackPath = menu.sections[0]?.items[0]?.href;
+    if (fallbackPath) redirect(fallbackPath);
+    notFound();
+  }
+
+  const payload = await getModule(endpoint);
 
   return (
     <AppShell menu={menu} currentPath={currentPath}>
