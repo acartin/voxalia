@@ -14,6 +14,8 @@
 | `.agent/` o `AGENTS.md` | `bash -n .agent/regenerar_contexto.sh` si cambia el script | no aplica |
 | `services/web/voxalia/` | `docker build -t voxalia-web:dev services/web/voxalia` desde repo root, o `npm run build` si Node existe en host | `docker compose up -d --build voxalia-web` |
 | `services/web-api/` | si hay Python: `python3 -m py_compile`; si hay contenedor futuro, validar dentro del contenedor | segun Dockerfile/compose futuro |
+| `services/asterisk/` | `docker exec voxalia-asterisk-api python -m py_compile app/main.py app/config.py app/db.py`; si cambia render/provisioning ejecutar `Apply Config` y validar dialplan/PJSIP/queues en runtime | `docker compose up -d --build voxalia-asterisk-api voxalia-asterisk-runtime` |
+| `services/asterisk-runtime/` | `docker compose config`; `docker exec voxalia-asterisk-runtime asterisk -rx 'core show version'`; si cambia include/config ejecutar `Apply Config` | `docker compose up -d --build voxalia-asterisk-runtime voxalia-asterisk-api` |
 | `services/voice-runtime/` | validar sintaxis del runtime real cuando exista; documentar comandos faltantes mientras sea esqueleto | segun Dockerfile/compose futuro |
 | `channels/` | validar adaptador especifico; para Python, `python3 -m py_compile`; para docs, lectura/diff | segun servicio futuro |
 | `connectors/` | validar conector especifico; no hacer llamadas reales a proveedores sin permiso | segun servicio futuro |
@@ -62,3 +64,22 @@ set -a; source .env; set +a; <comando>
 - Si hace falta un componente nuevo, agregarlo primero al modelo de
   configuracion del repo (`compose.yml`, `.env.example`, `infra/*`) y validar
   con `docker compose config`.
+
+## Metodo Correcto Para Cambios Asterisk
+
+Leer `.agent/ASTERISK_PROVISIONING_RULES.md`.
+
+Para cambios que afecten runtime Asterisk, validar el ciclo completo:
+
+```bash
+docker compose config
+docker exec voxalia-asterisk-api python -m py_compile app/main.py app/config.py app/db.py
+curl -sS -X POST http://127.0.0.1:8340/api/v1/asterisk/provisioning/apply \
+  -H 'Content-Type: application/json' \
+  -d '{"mode":"apply"}'
+docker exec voxalia-asterisk-runtime asterisk -rx 'dialplan show <context>'
+docker exec voxalia-asterisk-runtime asterisk -rx 'pjsip show endpoints'
+docker exec voxalia-asterisk-runtime asterisk -rx 'queue show <queue>'
+```
+
+Usar contextos/queues reales del cambio. No imprimir `.env` ni secretos.

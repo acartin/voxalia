@@ -25,8 +25,6 @@ function payloadFromForm(formData: FormData) {
   const payload: Record<string, unknown> = Object.fromEntries(formData.entries());
   delete payload._method;
   if (payload.channel_id === "") payload.channel_id = null;
-  if (payload.recording_required === "true") payload.recording_required = true;
-  if (payload.recording_required === "false") payload.recording_required = false;
   if (typeof payload.metadata === "string" && payload.metadata.trim()) payload.metadata = JSON.parse(payload.metadata);
   if (payload.metadata === "") payload.metadata = {};
   return payload;

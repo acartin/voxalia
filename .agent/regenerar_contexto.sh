@@ -60,11 +60,14 @@ cat > "$BRAIN_FILE" <<EOF
 
 | Ruta | Responsabilidad | Importancia |
 |---|---|---:|
-| \`compose.yml\` | Entrada operativa local: Postgres, Redis, Chatwoot, FreePBX/Asterisk y Voxalia Web. | 5 |
+| \`compose.yml\` | Entrada operativa local: Postgres, Redis, Chatwoot, Voxalia Web, Asterisk propio y FreePBX lab. | 5 |
 | \`.agent/AI_CONTEXT.md\` | Contexto rector de negocio, dominio y arquitectura. | 5 |
+| \`.agent/ASTERISK_PROVISIONING_RULES.md\` | Reglas obligatorias para cerrar BD, UI, render, Apply Config y runtime Asterisk. | 5 |
 | \`services/web/voxalia\` | Consola web Next.js y shell de portal. | 5 |
 | \`services/web-api\` | API/BFF autoritativo para auth, tenant, menu y datos consumidos por la web. | 5 |
-| \`services/voice-runtime\` | Futuro runtime de coordinacion de voz alrededor de Asterisk. | 5 |
+| \`services/asterisk\` | API/provisioner del control plane Asterisk; renderiza desde BD y aplica via AMI. | 5 |
+| \`services/asterisk-runtime\` | Runtime Asterisk directo gestionado por Voxalia, desacoplado de FreePBX. | 5 |
+| \`services/voice-runtime\` | Futuro coordinador de eventos de voz, llamadas y runtime operacional. | 5 |
 | \`channels\` | Adaptadores de canales externos a contratos internos. | 4 |
 | \`connectors\` | Integraciones externas PMS/CRM/pagos/correo. | 4 |
 | \`packages\` | Contratos, dominio, auth, eventos, config y observabilidad compartida. | 4 |
@@ -98,6 +101,7 @@ README.md
 .env.example
 compose.yml
 .agent/AI_CONTEXT.md
+.agent/ASTERISK_PROVISIONING_RULES.md
 .agent/RULES.md
 .agent/EXECUTION_MAP.md
 .agent/WEB_UI_STANDARDS.md
@@ -119,8 +123,9 @@ cat > "$PACK_FILE" <<EOF
 1. \`.agent/AI_CONTEXT.md\` for product and architecture direction.
 2. \`.agent/RULES.md\` for safeguards.
 3. \`.agent/EXECUTION_MAP.md\` for validation.
-4. \`.agent/WEB_UI_STANDARDS.md\` only for \`services/web/voxalia\`.
-5. \`.agent/BRAIN_MAP.md\` for routes and file entrypoints.
+4. \`.agent/ASTERISK_PROVISIONING_RULES.md\` before changing Asterisk DB, menus, CRUDs, renderers or runtime behavior.
+5. \`.agent/WEB_UI_STANDARDS.md\` only for \`services/web/voxalia\`.
+6. \`.agent/BRAIN_MAP.md\` for routes and file entrypoints.
 
 ## Critical Safeguards
 
@@ -129,6 +134,7 @@ cat > "$PACK_FILE" <<EOF
 - No secrets in code, logs, docs or chat output.
 - Provider-specific IDs and payloads are translated at adapters/connectors.
 - Voice/WebRTC work must consider HTTPS/WSS, mic permissions, NAT, RTP, STUN/TURN and SIP credential exposure.
+- Asterisk changes must close BD -> API/UI -> render -> Apply Config -> AMI reload -> runtime validation.
 - Regenerate this pack only when structure/commit meaningfully changes.
 
 ## Compose Services
@@ -145,9 +151,12 @@ compose.yml
 README.md
 services/web/voxalia
 services/web-api
+services/asterisk
+services/asterisk-runtime
 services/voice-runtime
 channels/asterisk-adapter
 channels/chatwoot-adapter
+infra/asterisk
 infra/freepbx
 packages/auth
 packages/domain

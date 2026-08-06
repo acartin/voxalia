@@ -14,38 +14,21 @@ function tokenFromRequest(request: Request): string | undefined {
 
 function redirectPath(request: Request, type: "success" | "error", message: string) {
   const referer = request.headers.get("referer");
-  const fallback = "/settings/asterisk";
+  const fallback = "/settings/asterisk-infrastructure";
   const target = referer ? new URL(referer).pathname + new URL(referer).search : fallback;
   const separator = target.includes("?") ? "&" : "?";
   return redirectTo(`${target}${separator}${feedbackQuery(type, message)}`);
 }
 
-function payloadFromForm(formData: FormData) {
-  const payload: Record<string, unknown> = Object.fromEntries(formData.entries());
-  if (typeof payload.timeout_seconds === "string") payload.timeout_seconds = Number(payload.timeout_seconds);
-  if (typeof payload.config === "string" && payload.config.trim()) payload.config = JSON.parse(payload.config);
-  if (payload.config === "") payload.config = {};
-  return payload;
-}
-
-export async function POST(request: Request, { params }: { params: Promise<{ tenantKey: string }> }) {
+export async function POST(request: Request) {
   const token = tokenFromRequest(request);
   if (!token) return redirectTo("/login");
   if (!ASTERISK_API_BASE_URL) return NextResponse.json({ detail: "Asterisk API not configured" }, { status: 500 });
 
-  const { tenantKey } = await params;
-  const formData = await request.formData();
-  let payload: Record<string, unknown>;
-  try {
-    payload = payloadFromForm(formData);
-  } catch {
-    return redirectPath(request, "error", "Config must be a valid JSON object.");
-  }
-
-  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/tenants/${encodeURIComponent(tenantKey)}/queues`, {
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/provisioning/apply`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ mode: "apply" }),
     cache: "no-store"
   });
 
@@ -54,5 +37,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ ten
     return redirectPath(request, "error", friendlyApiError(errorPayload));
   }
 
-  return redirectPath(request, "success", "Queue created successfully.");
+  return redirectPath(request, "success", "Asterisk config applied to Voxalia-managed files.");
 }

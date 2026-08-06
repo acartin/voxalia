@@ -11,10 +11,10 @@ const icons = {
 };
 
 const styles = {
-  info: "border-border-2 bg-card text-foreground [&_svg]:text-semantic-blue",
-  success: "border-border-2 bg-card text-foreground [&_svg]:text-semantic-green",
-  warning: "border-border-2 bg-card text-foreground [&_svg]:text-semantic-amber",
-  error: "border-border-2 bg-card text-foreground [&_svg]:text-semantic-red"
+  info: "border-transparent bg-[var(--blue-bg)] text-[var(--blue-text)] [&_svg]:text-[var(--blue-text)]",
+  success: "border-transparent bg-[var(--green-bg)] text-[var(--green-text)] [&_svg]:text-[var(--green-text)]",
+  warning: "border-transparent bg-[var(--amber-bg)] text-[var(--amber-text)] [&_svg]:text-[var(--amber-text)]",
+  error: "border-transparent bg-[var(--red-bg)] text-[var(--red-text)] [&_svg]:text-[var(--red-text)]"
 };
 
 export function Alert({
@@ -31,11 +31,11 @@ export function Alert({
   const Icon = icons[variant];
 
   return (
-    <div className={cn("flex gap-3 rounded-md border px-4 py-3 text-body-sm", styles[variant], className)}>
-      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+    <div className={cn("flex gap-3 rounded-md border px-5 py-4 text-body-sm shadow-[0_1px_2px_var(--shadow-color)]", styles[variant], className)}>
+      <Icon className="mt-0.5 h-5 w-5 shrink-0" />
       <div className="min-w-0">
-        <div className="text-card-title font-medium">{title}</div>
-        {children ? <div className="mt-1 text-body-sm text-muted-foreground">{children}</div> : null}
+        <div className="text-card-title font-semibold">{title}</div>
+        {children ? <div className="mt-1 text-body-sm opacity-95">{children}</div> : null}
       </div>
     </div>
   );

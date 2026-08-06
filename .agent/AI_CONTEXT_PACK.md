@@ -1,9 +1,9 @@
 # AI Context Pack
 
-- Generated UTC: `2026-07-31T19:21:34Z`
+- Generated UTC: `2026-08-06T01:57:10Z`
 - Repo root: `/srv/voxalia`
-- Git branch: `HETZNER-LOCAL-2026-Julio-26`
-- Git commit: `da02f26`
+- Git branch: `HETZNER-LOCAL-2026-Agosto-3`
+- Git commit: `1742917`
 - Policy: compact; read exact files only when the task needs them.
 
 ## Start Here
@@ -11,8 +11,9 @@
 1. `.agent/AI_CONTEXT.md` for product and architecture direction.
 2. `.agent/RULES.md` for safeguards.
 3. `.agent/EXECUTION_MAP.md` for validation.
-4. `.agent/WEB_UI_STANDARDS.md` only for `services/web/voxalia`.
-5. `.agent/BRAIN_MAP.md` for routes and file entrypoints.
+4. `.agent/ASTERISK_PROVISIONING_RULES.md` before changing Asterisk DB, menus, CRUDs, renderers or runtime behavior.
+5. `.agent/WEB_UI_STANDARDS.md` only for `services/web/voxalia`.
+6. `.agent/BRAIN_MAP.md` for routes and file entrypoints.
 
 ## Critical Safeguards
 
@@ -21,20 +22,22 @@
 - No secrets in code, logs, docs or chat output.
 - Provider-specific IDs and payloads are translated at adapters/connectors.
 - Voice/WebRTC work must consider HTTPS/WSS, mic permissions, NAT, RTP, STUN/TURN and SIP credential exposure.
+- Asterisk changes must close BD -> API/UI -> render -> Apply Config -> AMI reload -> runtime validation.
 - Regenerate this pack only when structure/commit meaningfully changes.
 
 ## Compose Services
 
 ```text
-freepbx-db
-freepbx
 postgres
-voxalia-web-api
 redis
-chatwoot-worker
-voxalia-asterisk
+voxalia-asterisk-runtime
+voxalia-asterisk-api
+voxalia-web-api
 voxalia-web
 chatwoot
+chatwoot-worker
+freepbx-db
+freepbx
 ```
 
 ## Operational Entry Points
@@ -45,9 +48,12 @@ compose.yml
 README.md
 services/web/voxalia
 services/web-api
+services/asterisk
+services/asterisk-runtime
 services/voice-runtime
 channels/asterisk-adapter
 channels/chatwoot-adapter
+infra/asterisk
 infra/freepbx
 packages/auth
 packages/domain

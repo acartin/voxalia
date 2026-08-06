@@ -29,8 +29,6 @@ function payloadFromForm(formData: FormData) {
   if (typeof payload.number_id === "string") payload.number_id = Number(payload.number_id);
   if (typeof payload.inbound_context_id === "string") payload.inbound_context_id = Number(payload.inbound_context_id);
   if (typeof payload.priority === "string") payload.priority = Number(payload.priority);
-  if (payload.recording_required === "true") payload.recording_required = true;
-  if (payload.recording_required === "false") payload.recording_required = false;
   if (typeof payload.config === "string" && payload.config.trim()) payload.config = JSON.parse(payload.config);
   if (payload.config === "") payload.config = {};
   return payload;

@@ -50,6 +50,21 @@ Regla de oro: si aparece `if tenant == ...` o `if vertical == ...` dentro de dom
 - El audio/media no debe pasar por Next.js; la web coordina UI y estado, no transporta RTP.
 - Registrar eventos de llamada con IDs internos; IDs de proveedores quedan traducidos por adaptadores.
 
+## 5.1 Asterisk Provisioning
+
+- Leer `.agent/ASTERISK_PROVISIONING_RULES.md` antes de cambiar menus, CRUDs,
+  tablas, campos, seeds, endpoints o UI que afecten configuracion de Asterisk.
+- Todo dato que afecte runtime Asterisk debe cerrar el ciclo: BD -> API/UI ->
+  render -> archivos `*_voxalia.conf` -> `Apply Config` -> AMI reload ->
+  validacion runtime.
+- No marcar ni asumir `applied` si solo se guardo en BD. `applied` exige que el
+  estado renderizado haya sido escrito y recargado exitosamente en Asterisk.
+- Si se agrega una tabla/campo que afecta dialplan, PJSIP, queues, routing,
+  recording, trunks o runtime, actualizar tambien `render_asterisk_config`,
+  el calculo de pending/apply state y la validacion correspondiente.
+- FreePBX es laboratorio/referencia; no es fuente de verdad ni destino de
+  `Apply Config`.
+
 ## 6. Docker, DB Y Operacion
 
 - `compose.yml` es la entrada local principal.

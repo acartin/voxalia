@@ -87,7 +87,7 @@ services:
     container_name: voxalia-web
     environment:
       VOXALIA_API_BASE_URL: ${VOXALIA_API_BASE_URL:-http://voxalia-web-api:8000/api/v1}
-      VOXALIA_ASTERISK_API_BASE_URL: ${VOXALIA_ASTERISK_API_BASE_URL:-http://voxalia-asterisk:8000/api/v1}
+      VOXALIA_ASTERISK_API_BASE_URL: ${VOXALIA_ASTERISK_API_BASE_URL:-http://voxalia-asterisk-api:8000/api/v1}
       VOXALIA_PLACEHOLDER_AUTH: ${VOXALIA_PLACEHOLDER_AUTH:-false}
       VOXALIA_SECURE_COOKIES: ${VOXALIA_SECURE_COOKIES:-false}
     ports:
@@ -95,7 +95,7 @@ services:
     depends_on:
       voxalia-web-api:
         condition: service_started
-      voxalia-asterisk:
+      voxalia-asterisk-api:
         condition: service_started
     restart: unless-stopped
 
@@ -116,18 +116,47 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  voxalia-asterisk:
+  voxalia-asterisk-api:
     build:
       context: ./services/asterisk
-    image: voxalia-asterisk:dev
-    container_name: voxalia-asterisk
+    image: voxalia-asterisk-api:dev
+    container_name: voxalia-asterisk-api
     environment:
-      VOXALIA_ASTERISK_DATABASE_URL: ${VOXALIA_ASTERISK_DATABASE_URL:-${VOXALIA_DATABASE_URL:?set VOXALIA_DATABASE_URL in .env}}
+      VOXALIA_ASTERISK_API_DATABASE_URL: ${VOXALIA_ASTERISK_API_DATABASE_URL:-${VOXALIA_ASTERISK_DATABASE_URL:-${VOXALIA_DATABASE_URL:?set VOXALIA_DATABASE_URL in .env}}}
+      VOXALIA_ASTERISK_API_RENDER_OUTPUT_DIR: ${VOXALIA_ASTERISK_API_RENDER_OUTPUT_DIR:-/var/lib/voxalia/asterisk/rendered}
+      VOXALIA_ASTERISK_API_RELOAD_COMMAND: ${VOXALIA_ASTERISK_API_RELOAD_COMMAND:-}
+      VOXALIA_ASTERISK_API_AMI_HOST: ${VOXALIA_ASTERISK_API_AMI_HOST:-voxalia-asterisk-runtime}
+      VOXALIA_ASTERISK_API_AMI_PORT: ${VOXALIA_ASTERISK_API_AMI_PORT:-5038}
+      VOXALIA_ASTERISK_API_AMI_USERNAME: ${VOXALIA_ASTERISK_RUNTIME_AMI_USERNAME:-voxalia_provisioner}
+      VOXALIA_ASTERISK_API_AMI_PASSWORD: ${VOXALIA_ASTERISK_RUNTIME_AMI_PASSWORD:?set VOXALIA_ASTERISK_RUNTIME_AMI_PASSWORD in .env}
     ports:
-      - "${VOXALIA_ASTERISK_PORT:-8340}:8000"
+      - "${VOXALIA_ASTERISK_API_PORT:-8340}:8000"
     depends_on:
       postgres:
         condition: service_healthy
+      voxalia-asterisk-runtime:
+        condition: service_started
+    volumes:
+      - voxalia-asterisk-rendered:/var/lib/voxalia/asterisk/rendered
+    restart: unless-stopped
+
+  voxalia-asterisk-runtime:
+    build:
+      context: ./services/asterisk-runtime
+    image: voxalia-asterisk-runtime:dev
+    container_name: voxalia-asterisk-runtime
+    environment:
+      VOXALIA_ASTERISK_RUNTIME_AMI_USERNAME: ${VOXALIA_ASTERISK_RUNTIME_AMI_USERNAME:-voxalia_provisioner}
+      VOXALIA_ASTERISK_RUNTIME_AMI_PASSWORD: ${VOXALIA_ASTERISK_RUNTIME_AMI_PASSWORD:?set VOXALIA_ASTERISK_RUNTIME_AMI_PASSWORD in .env}
+    ports:
+      - "${VOXALIA_ASTERISK_RUNTIME_SIP_PORT:-5060}:5060/udp"
+      - "${VOXALIA_ASTERISK_RUNTIME_AMI_PORT:-5038}:5038/tcp"
+      - "${VOXALIA_ASTERISK_RUNTIME_HTTP_PORT:-8087}:8088/tcp"
+      - "${VOXALIA_ASTERISK_RUNTIME_RTP_START:-13000}-${VOXALIA_ASTERISK_RUNTIME_RTP_END:-13100}:13000-13100/udp"
+    volumes:
+      - voxalia-asterisk-rendered:/etc/asterisk/voxalia
+      - voxalia-asterisk-runtime-spool:/var/spool/asterisk
+      - voxalia-asterisk-runtime-logs:/var/log/asterisk
     restart: unless-stopped
 
   freepbx-db:
@@ -187,6 +216,9 @@ volumes:
   voxalia-postgres-data:
   voxalia-redis-data:
   voxalia-chatwoot-storage:
+  voxalia-asterisk-rendered:
+  voxalia-asterisk-runtime-spool:
+  voxalia-asterisk-runtime-logs:
   voxalia-freepbx-db-data:
   voxalia-freepbx-var:
   voxalia-freepbx-etc:

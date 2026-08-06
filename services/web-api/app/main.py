@@ -64,7 +64,6 @@ class TenantChannelRequest(BaseModel):
     routing_key: str = Field(default="", max_length=240)
     service_policy_id: int | None = None
     default_language: str = Field(default="en", min_length=1, max_length=12)
-    recording_required: bool = True
     status: str = Field(default="active", pattern="^(active|inactive|provisioning|failed)$")
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -76,7 +75,6 @@ class VoiceNumberRequest(BaseModel):
     number_type: str = Field(pattern="^(toll_free|local|extension|outbound_caller_id)$")
     country_code: str = Field(default="US", min_length=2, max_length=2)
     status: str = Field(default="active", pattern="^(active|inactive|provisioning|failed|released)$")
-    recording_required: bool = True
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -1082,7 +1080,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                   tc.service_policy_id::text,
                   coalesce(tsp.display_name, '') as service_policy,
                   tc.default_language,
-                  tc.recording_required,
                   tc.status,
                   tc.metadata,
                   tc.updated_at::text
@@ -1108,7 +1105,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                   vn.channel_id::text,
                   coalesce(tc.display_name, '') as channel,
                   coalesce(tc.channel_type, '') as channel_type,
-                  vn.recording_required,
                   vn.status,
                   vn.metadata,
                   vn.updated_at::text
@@ -1288,7 +1284,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                     {"id": "number_type", "header": "Type"},
                     {"id": "channel", "header": "Channel"},
                     {"id": "country", "header": "Country"},
-                    {"id": "recording_required", "header": "Recording"},
                     {"id": "status", "header": "Status"},
                 ],
                 "createFields": [
@@ -1297,7 +1292,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                     {"label": "Number type", "name": "number_type", "control": "select", "options": number_type_options, "defaultValue": "toll_free"},
                     {"label": "Channel", "name": "channel_id", "control": "select", "options": channel_options},
                     {"label": "Country", "name": "country_code", "control": "select", "options": countries, "defaultValue": tenant["country_code"]},
-                    {"label": "Recording required", "name": "recording_required", "control": "select", "options": boolean_options, "defaultValue": "true"},
                     {"label": "Status", "name": "status", "control": "select", "options": number_status_options, "defaultValue": "active"},
                     {"label": "Metadata JSON", "name": "metadata", "control": "json", "required": False, "defaultValue": "{}"},
                 ],
@@ -1307,7 +1301,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                     {"label": "Number type", "name": "number_type", "control": "select", "options": number_type_options},
                     {"label": "Channel", "name": "channel_id", "control": "select", "options": channel_options},
                     {"label": "Country", "name": "country_code", "control": "select", "options": countries},
-                    {"label": "Recording required", "name": "recording_required", "control": "select", "options": boolean_options},
                     {"label": "Status", "name": "status", "control": "select", "options": number_status_options},
                     {"label": "Metadata JSON", "name": "metadata", "control": "json", "required": False},
                 ],
@@ -1345,7 +1338,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                     {"id": "external_key", "header": "External key"},
                     {"id": "service_policy", "header": "Policy"},
                     {"id": "default_language", "header": "Language"},
-                    {"id": "recording_required", "header": "Recording"},
                     {"id": "status", "header": "Status"},
                 ],
                 "createFields": [
@@ -1356,7 +1348,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                     {"label": "External key", "name": "routing_key", "required": False, "placeholder": "chatwoot inbox id, WhatsApp phone id or webchat widget key", "hideWhen": {"field": "channel_type", "values": ["voice_toll_free", "voice_local"]}},
                     {"label": "Service policy", "name": "service_policy_id", "control": "select", "options": policy_options, "required": False},
                     {"label": "Default language", "name": "default_language", "control": "select", "options": language_options, "defaultValue": "en"},
-                    {"label": "Recording required", "name": "recording_required", "control": "select", "options": boolean_options, "defaultValue": "true"},
                     {"label": "Status", "name": "status", "control": "select", "options": channel_status_options, "defaultValue": "active"},
                     {"label": "Metadata JSON", "name": "metadata", "control": "json", "required": False, "defaultValue": "{}"},
                 ],
@@ -1368,7 +1359,6 @@ def tenant_workspace(tenant_key: str, context: RequestContext = Depends(require_
                     {"label": "External key", "name": "routing_key", "required": False, "hideWhen": {"field": "channel_type", "values": ["voice_toll_free", "voice_local"]}},
                     {"label": "Service policy", "name": "service_policy_id", "control": "select", "options": policy_options, "required": False},
                     {"label": "Default language", "name": "default_language", "control": "select", "options": language_options},
-                    {"label": "Recording required", "name": "recording_required", "control": "select", "options": boolean_options},
                     {"label": "Status", "name": "status", "control": "select", "options": channel_status_options},
                     {"label": "Metadata JSON", "name": "metadata", "control": "json", "required": False},
                 ],
@@ -2167,11 +2157,11 @@ def create_tenant_channel(
                 """
                 insert into public.tenant_channels (
                   tenant_id, service_policy_id, channel_key, channel_type, display_name,
-                  provider, routing_key, default_language, status, recording_required, metadata
+                  provider, routing_key, default_language, status, metadata
                 )
                 values (
                   %(tenant_id)s, %(service_policy_id)s, %(channel_key)s, %(channel_type)s, %(display_name)s,
-                  %(provider)s, %(routing_key)s, %(default_language)s, %(status)s, %(recording_required)s, %(metadata)s::jsonb
+                  %(provider)s, %(routing_key)s, %(default_language)s, %(status)s, %(metadata)s::jsonb
                 )
                 returning id::text;
                 """,
@@ -2185,7 +2175,6 @@ def create_tenant_channel(
                     "routing_key": payload.routing_key,
                     "default_language": payload.default_language,
                     "status": payload.status,
-                    "recording_required": payload.recording_required,
                     "metadata": json.dumps(payload.metadata),
                 },
             )
@@ -2226,7 +2215,6 @@ def update_tenant_channel(
                   routing_key = %(routing_key)s,
                   default_language = %(default_language)s,
                   status = %(status)s,
-                  recording_required = %(recording_required)s,
                   metadata = %(metadata)s::jsonb,
                   updated_at = now()
                 where id = %(channel_id)s
@@ -2244,7 +2232,6 @@ def update_tenant_channel(
                     "routing_key": payload.routing_key,
                     "default_language": payload.default_language,
                     "status": payload.status,
-                    "recording_required": payload.recording_required,
                     "metadata": json.dumps(payload.metadata),
                 },
             )
@@ -2313,11 +2300,11 @@ def create_voice_number(
                 """
                 insert into public.voice_numbers (
                   tenant_id, channel_id, number_e164, label, number_type, country_code,
-                  status, recording_required, metadata
+                  status, metadata
                 )
                 values (
                   %(tenant_id)s, %(channel_id)s, %(number_e164)s, %(label)s, %(number_type)s, %(country_code)s,
-                  %(status)s, %(recording_required)s, %(metadata)s::jsonb
+                  %(status)s, %(metadata)s::jsonb
                 )
                 returning id::text;
                 """,
@@ -2329,7 +2316,6 @@ def create_voice_number(
                     "number_type": payload.number_type,
                     "country_code": country_code,
                     "status": payload.status,
-                    "recording_required": payload.recording_required,
                     "metadata": json.dumps(payload.metadata),
                 },
             )
@@ -2369,7 +2355,6 @@ def update_voice_number(
                   number_type = %(number_type)s,
                   country_code = %(country_code)s,
                   status = %(status)s,
-                  recording_required = %(recording_required)s,
                   metadata = %(metadata)s::jsonb,
                   updated_at = now()
                 where id = %(number_id)s
@@ -2385,7 +2370,6 @@ def update_voice_number(
                     "number_type": payload.number_type,
                     "country_code": country_code,
                     "status": payload.status,
-                    "recording_required": payload.recording_required,
                     "metadata": json.dumps(payload.metadata),
                 },
             )

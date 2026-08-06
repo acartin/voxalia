@@ -23,7 +23,12 @@ function redirectPath(request: Request, type: "success" | "error", message: stri
 function payloadFromForm(formData: FormData) {
   const payload: Record<string, unknown> = Object.fromEntries(formData.entries());
   delete payload._method;
-  if (typeof payload.timeout_seconds === "string") payload.timeout_seconds = Number(payload.timeout_seconds);
+  if (payload.recording_required === "true") payload.recording_required = true;
+  if (payload.recording_required === "false") payload.recording_required = false;
+  if (payload.disclosure_required === "true") payload.disclosure_required = true;
+  if (payload.disclosure_required === "false") payload.disclosure_required = false;
+  if (typeof payload.retention_days === "string") payload.retention_days = Number(payload.retention_days);
+  if (payload.scope_id === "") payload.scope_id = "";
   if (typeof payload.config === "string" && payload.config.trim()) payload.config = JSON.parse(payload.config);
   if (payload.config === "") payload.config = {};
   return payload;
@@ -47,7 +52,7 @@ export async function POST(
     return redirectPath(request, "error", "Config must be a valid JSON object.");
   }
 
-  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/tenants/${encodeURIComponent(tenantKey)}/queues/${encodeURIComponent(id)}`, {
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/tenants/${encodeURIComponent(tenantKey)}/recording/${encodeURIComponent(id)}`, {
     method: method === "delete" ? "DELETE" : "PATCH",
     headers: payload ? { "Content-Type": "application/json" } : undefined,
     body: payload ? JSON.stringify(payload) : undefined,
@@ -59,5 +64,5 @@ export async function POST(
     return redirectPath(request, "error", friendlyApiError(errorPayload));
   }
 
-  return redirectPath(request, "success", method === "delete" ? "Queue deleted successfully." : "Queue updated successfully.");
+  return redirectPath(request, "success", method === "delete" ? "Recording policy deleted successfully." : "Recording policy updated successfully.");
 }

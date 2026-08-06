@@ -33,14 +33,24 @@ Local URLs:
 - Chatwoot: `http://localhost:8300`
 - FreePBX: `http://localhost:8310`
 - FreePBX HTTPS: `https://localhost:8311`
+- Voxalia Web: `http://localhost:8320`
+- Voxalia Web API: `http://localhost:8330`
+- Voxalia Asterisk API: `http://localhost:8340`
 - PostgreSQL: `localhost:8432`
-- Asterisk SIP through FreePBX: `localhost:5062/udp`
-- Asterisk RTP through FreePBX: `localhost:12000-12100/udp`
+- Voxalia-managed Asterisk SIP: `localhost:5060/udp`
+- Voxalia-managed Asterisk AMI: `localhost:5038/tcp`
+- Voxalia-managed Asterisk HTTP/WebSocket: `localhost:8087/tcp`
+- Voxalia-managed Asterisk RTP: `localhost:13000-13100/udp`
+- FreePBX lab SIP: `localhost:5062/udp`
+- FreePBX lab RTP: `localhost:12000-12100/udp`
 
-FreePBX is the web interface used to configure trunks, numbers, extensions,
-inbound routes, queues, IVR, recordings, and other PBX behavior.
+Voxalia-managed Asterisk is split into `voxalia-asterisk-runtime`, the actual
+Asterisk runtime, and `voxalia-asterisk-api`, the API/provisioner that renders
+configuration from Voxalia PostgreSQL and applies it through AMI.
 
-FreePBX/Asterisk uses `America/Costa_Rica` by default for local tests.
+FreePBX remains available only as a lab/reference UI. It is not the source of
+truth for Voxalia-owned tenants, contexts, extensions, queues, routing or
+recording policies.
 
 ## pgAdmin
 

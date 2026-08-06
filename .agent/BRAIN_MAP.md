@@ -1,20 +1,23 @@
 # BRAIN_MAP
 
-- Generated UTC: `2026-07-31T19:21:34Z`
+- Generated UTC: `2026-08-06T01:57:10Z`
 - Repo root: `/srv/voxalia`
-- Git branch: `HETZNER-LOCAL-2026-Julio-26`
-- Git commit: `da02f26`
+- Git branch: `HETZNER-LOCAL-2026-Agosto-3`
+- Git commit: `1742917`
 - Policy: high-signal only; Voxalia safeguards, security and context economy.
 
 ## 1. Mapa De Intenciones
 
 | Ruta | Responsabilidad | Importancia |
 |---|---|---:|
-| `compose.yml` | Entrada operativa local: Postgres, Redis, Chatwoot, FreePBX/Asterisk y Voxalia Web. | 5 |
+| `compose.yml` | Entrada operativa local: Postgres, Redis, Chatwoot, Voxalia Web, Asterisk propio y FreePBX lab. | 5 |
 | `.agent/AI_CONTEXT.md` | Contexto rector de negocio, dominio y arquitectura. | 5 |
+| `.agent/ASTERISK_PROVISIONING_RULES.md` | Reglas obligatorias para cerrar BD, UI, render, Apply Config y runtime Asterisk. | 5 |
 | `services/web/voxalia` | Consola web Next.js y shell de portal. | 5 |
 | `services/web-api` | API/BFF autoritativo para auth, tenant, menu y datos consumidos por la web. | 5 |
-| `services/voice-runtime` | Futuro runtime de coordinacion de voz alrededor de Asterisk. | 5 |
+| `services/asterisk` | API/provisioner del control plane Asterisk; renderiza desde BD y aplica via AMI. | 5 |
+| `services/asterisk-runtime` | Runtime Asterisk directo gestionado por Voxalia, desacoplado de FreePBX. | 5 |
+| `services/voice-runtime` | Futuro coordinador de eventos de voz, llamadas y runtime operacional. | 5 |
 | `channels` | Adaptadores de canales externos a contratos internos. | 4 |
 | `connectors` | Integraciones externas PMS/CRM/pagos/correo. | 4 |
 | `packages` | Contratos, dominio, auth, eventos, config y observabilidad compartida. | 4 |
@@ -32,15 +35,16 @@
 ## 3. Servicios Compose
 
 ```text
-freepbx-db
-freepbx
 postgres
-voxalia-web-api
 redis
-chatwoot-worker
-voxalia-asterisk
+voxalia-asterisk-runtime
+voxalia-asterisk-api
+voxalia-web-api
 voxalia-web
 chatwoot
+chatwoot-worker
+freepbx-db
+freepbx
 ```
 
 ## 4. Topologia Compacta
@@ -89,6 +93,8 @@ products/multichannel-inbox
 products/sales-followup
 services
 services/asterisk
+services/asterisk-runtime
+services/asterisk-runtime/config
 services/asterisk/app
 services/asterisk/db
 services/voice-runtime
@@ -115,6 +121,7 @@ README.md
 .env.example
 compose.yml
 .agent/AI_CONTEXT.md
+.agent/ASTERISK_PROVISIONING_RULES.md
 .agent/RULES.md
 .agent/EXECUTION_MAP.md
 .agent/WEB_UI_STANDARDS.md
@@ -166,6 +173,15 @@ products/managed-reception/README.md
 products/multichannel-inbox/README.md
 products/sales-followup/README.md
 services/README.md
+services/asterisk-runtime/Dockerfile
+services/asterisk-runtime/README.md
+services/asterisk-runtime/config/asterisk.conf
+services/asterisk-runtime/config/extensions.conf
+services/asterisk-runtime/config/http.conf
+services/asterisk-runtime/config/pjsip.conf
+services/asterisk-runtime/config/queues.conf
+services/asterisk-runtime/config/rtp.conf
+services/asterisk-runtime/entrypoint.sh
 services/asterisk/Dockerfile
 services/asterisk/README.md
 services/asterisk/app/__init__.py

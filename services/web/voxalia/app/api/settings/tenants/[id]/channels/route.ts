@@ -24,8 +24,6 @@ function redirectPath(request: Request, type: "success" | "warning" | "error" | 
 function payloadFromForm(formData: FormData) {
   const payload: Record<string, unknown> = Object.fromEntries(formData.entries());
   if (payload.service_policy_id === "") payload.service_policy_id = null;
-  if (payload.recording_required === "true") payload.recording_required = true;
-  if (payload.recording_required === "false") payload.recording_required = false;
   if (typeof payload.metadata === "string" && payload.metadata.trim()) payload.metadata = JSON.parse(payload.metadata);
   if (payload.metadata === "") payload.metadata = {};
   return payload;

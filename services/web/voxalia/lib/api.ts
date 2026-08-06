@@ -479,6 +479,22 @@ export async function getAsteriskInstances(): Promise<ModulePayload> {
   return response.json() as Promise<ModulePayload>;
 }
 
+export async function getAsteriskInfrastructureWorkspace(): Promise<WorkspacePayload> {
+  if (!ASTERISK_API_BASE_URL) {
+    throw new Error("VOXALIA_ASTERISK_API_BASE_URL is not configured");
+  }
+
+  const response = await fetch(`${ASTERISK_API_BASE_URL}/asterisk/workspace`, {
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Voxalia Asterisk API error ${response.status}`);
+  }
+
+  return response.json() as Promise<WorkspacePayload>;
+}
+
 export async function getAsteriskWorkspace(tenantKey: string): Promise<WorkspacePayload> {
   if (!ASTERISK_API_BASE_URL) {
     throw new Error("VOXALIA_ASTERISK_API_BASE_URL is not configured");
